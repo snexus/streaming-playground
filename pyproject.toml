@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "streaming-playground"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+readme = "README.md"
+packages = [{include = "streaming_playground"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+faust = "^1.10.4"
+pandas = "^1.5.2"
+confluent-kafka = "^1.9.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
