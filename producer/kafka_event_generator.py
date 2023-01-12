@@ -1,3 +1,4 @@
+from time import sleep
 from typing import List
 from uuid import uuid4
 from confluent_kafka import Producer
@@ -5,6 +6,7 @@ from confluent_kafka.serialization import StringSerializer, SerializationContext
 from confluent_kafka.schema_registry.json_schema import JSONSerializer
 import argparse
 from confluent_kafka.schema_registry import SchemaRegistryClient
+import numpy as np
 
 
 
@@ -75,6 +77,25 @@ def delivery_report(err, msg):
         msg.key(), msg.topic(), msg.partition(), msg.offset()))
     
 
+def generate_events(n_events: int) -> List[SensorEvent]:
+  
+  n_temp = n_events // 2
+  n_vibration = n_events - n_temp
+  
+  sensor_ids_temp = 1.0 + np.random.choice(n_temp, replace=True, size=n_temp)
+  sensor_ids_vibr = 1.0 + n_temp + np.random.choice(n_vibration, replace=True, size=n_vibration)
+  
+  temp_readings = np.random.normal(25, 4, size=n_temp)
+  vibr_readings = np.random.normal(100, 10, size=n_vibration)
+  
+  temp_events = [SensorEvent(sensor_id=i, sensor_type="temperature", sensor_reading=r) for i, r in zip(sensor_ids_temp,temp_readings)]
+  vibr_events = [SensorEvent(sensor_id=i, sensor_type="vibration", sensor_reading=r) for i, r in zip(sensor_ids_vibr,vibr_readings)]
+  all_events = temp_events + vibr_events
+  np.random.shuffle(all_events)
+  return all_events
+  
+
+
 def main(args):
     topic = args.topic
     
@@ -86,11 +107,23 @@ def main(args):
     
     producer = Producer({'bootstrap.servers': args.bootstrap_servers})
     
-    event = SensorEvent(sensor_id=1, sensor_type="temperature", sensor_reading=32.5)
+    #event = SensorEvent(sensor_id=1, sensor_type="temperature", sensor_reading=32.5)
     
-    producer.produce(topic=topic, key=string_serializer(str(uuid4())),
-                             value=json_serializer(event, SerializationContext(topic, MessageField.VALUE)),
-                             on_delivery=delivery_report)
+    events = generate_events(int(args.n_events))
+    rate = float(args.rate)
+    
+    delays = 60.0/np.random.poisson(rate,size = len(events))
+    print(f"Sending {len(events)} events with average rate {rate} events / minute.")
+    for i, event in enumerate(events):
+      producer.produce(topic=topic, 
+                              key=string_serializer(str(uuid4()), SerializationContext(topic, MessageField.KEY)),
+                              value=json_serializer(event, SerializationContext(topic, MessageField.VALUE)),
+                              on_delivery=delivery_report)
+      sleep_sec = delays[i]
+      print(f"Sending event {i} and sleeping for {sleep_sec:.2f} seconds.")
+      sleep(sleep_sec)
+    
+    producer.flush()
 
 
 
@@ -99,9 +132,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="JSONSerailizer example")
     parser.add_argument('-b', dest="bootstrap_servers", default="localhost:9092",
                         help="Bootstrap broker(s) (host[:port])")
-    parser.add_argument('-s', dest="schema_registry", default="localhost:8081",
+    parser.add_argument('-s', dest="schema_registry", default="http://localhost:8081",
                         help="Schema Registry (http(s)://host[:port]")
-    parser.add_argument('-t', dest="topic", default="example_serde_json",
-                        help="Topic name")
+    parser.add_argument('-t', dest="topic", required=True,
+                        help="Topic name.")
+    parser.add_argument('-n', dest="n_events", default=1,
+                        help="Number of events to generate.")
+    parser.add_argument('-r', dest="rate", default=100,
+                        help="Average rate of events per minute (Poisson)")
     main(parser.parse_args())
     
