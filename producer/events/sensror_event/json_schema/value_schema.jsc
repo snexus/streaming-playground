@@ -1,0 +1,25 @@
+{
+"$schema": "http://json-schema.org/draft-07/schema#",
+"title": "SensorEvent",
+"description": "A demo event",
+"type": "object",
+"properties": {
+
+  "sensor_id": {
+    "description": "Sensor id",
+    "type": "number",
+    "exclusiveMinimum": 0
+  },
+  
+  "sensor_type": {
+    "description": "Sensor Type",
+    "type": "string"
+  },
+  
+  "sensor_reading": {
+    "description": "Sensor reading",
+    "type": "number"
+  }
+},
+"required": [ "sensor_id", "sensor_type", "sensor_reading" ]
+}

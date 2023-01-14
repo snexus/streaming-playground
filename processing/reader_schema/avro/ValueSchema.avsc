@@ -1,0 +1,20 @@
+{
+  "namespace": "example.avro",
+  "type": "record",
+  "name": "SensorEvent",
+  "fields": [
+    {
+      "name": "sensor_id",
+      "type": "int"
+    },
+    {
+      "name": "sensor_type",
+      "type": "string"
+      
+    },
+    {
+      "name": "sensor_reading",
+      "type": "float"
+    }
+  ]
+}
