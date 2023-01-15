@@ -19,6 +19,10 @@
   "sensor_reading": {
     "description": "Sensor reading",
     "type": "number"
+  },
+  "event_timestamp": {
+    "description": "Event timestamp",
+    "type": "number"
   }
 },
 "required": [ "sensor_id", "sensor_type", "sensor_reading" ]

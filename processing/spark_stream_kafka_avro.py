@@ -8,15 +8,14 @@ from pyspark.sql.functions import col, regexp_replace, udf, lit, expr
 
 from pyspark.sql.avro.functions import from_avro
 
-from pyspark.sql.types import StructType, StructField, StringType, ArrayType
+from pyspark.sql.types import StructType, StructField, StringType, ArrayType, TimestampType
 import os
 
 # import org.apache.spark.sql.functions.from_json
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 BOOTSTRAP_SERVER = "localhost:9092"
-KAFKA_TOPIC = "sensor_events_avro"
-OUTPUT_PATH = "/home/snexus/projects/personal/streaming-playground/processing/output"
+KAFKA_TOPIC = "sensor_events_avro_timestamp"
 
 
 AVRO_KEY_SCHEMA_PATH = os.path.join(
@@ -59,6 +58,7 @@ query = (
     .withColumn("sensor_id", col("event.sensor_id"))
     .withColumn("sensor_reading", col("event.sensor_reading"))
     .withColumn("sensor_type", col("event.sensor_type"))
+    .withColumn("event_timestamp", ((col("event.event_timestamp") / 1e3).cast(TimestampType())))
     .writeStream.format("console")
     .outputMode("append")
     .start()

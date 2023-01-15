@@ -15,6 +15,12 @@
     {
       "name": "sensor_reading",
       "type": "float"
+    },
+    {
+      "name": "event_timestamp",
+	  "type": "long",
+	  "logicalType": "timestamp-millis"
     }
+
   ]
 }
